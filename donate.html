@@ -1,21 +1,227 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="UTF-8"/>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Donate</title>
-        <link rel="stylesheet" href="styles.css">
-    </head>
-    <body>
-        <div class="main">
-            <div class="donate">
-               <form>
-                <input type="text" id="booktitle" name="book-title" />
-                <input type="text" id="author" name="author"/>
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Donate a Book</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Additional styles for the donate page */
+        .donate-container h1 {
+            color: #803D3B; /* Matches your site's heading color */
+        }
+
+        .image-choice-container, .image-capture-container, .image-upload-container, .book-details-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        /* Style for the initial choice buttons */
+        .choiceBtn {
+            border: none;
+            padding: 15px;
+            text-align: center;
+            font-size: 20px;
+            border-radius: 20px;
+            margin: 10px;
+            cursor: pointer;
+            color: whitesmoke;
+            font-weight: bolder;
+            background-color: #8FA937;
+            width: 250px;
+        }
+
+        #video, #canvas, #preview {
+            border-radius: 8px;
+            border: 2px solid #803D3B;
+            background-color: #f0f0f0;
+        }
+        
+        #preview {
+            display: none; /* Hide preview area initially */
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Aligning form elements nicely */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 400px;
+            color: #803D3B;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="header"></div>
+    <script src="scripts/include.js"></script>
+    <div class="gobackBtn-wrapper">
+        <a class="gobackBtn" href="index.html">Go Back</a>
+    </div>
+
+    <div class="main donate-page">
+        <div class="donate-container">
+            <h1>Donate a New Book</h1>
+            <!-- first button display  -->
+            <div id="imageChoice" class="image-choice-container">
+                <p>First, add an image of the book's cover.</p>
+                <button id="showCaptureBtn" class="choiceBtn">📸 Take a Photo</button>
+                <button id="showUploadBtn" class="choiceBtn">⬆️ Upload from Device</button>
+            </div>
+            <!-- Take a photo side -->
+            <div id="captureContainer" class="image-capture-container hidden">
+                <video id="video" width="320" height="240" autoplay></video>
+                <button id="snapBtn" class="donateBtn" style="width: 200px;">Take Picture</button>
+            </div>
+            <!-- Upload File side -->
+            <div id="uploadContainer" class="image-upload-container hidden">
+                 <input type="file" id="fileInput" accept="image/*" class="button" style="text-align: center;"/>
+            </div>
+            
+            <!-- Confirm Details -->
+            <div id="detailsContainer" class="book-details-container hidden">
+                <h2>Confirm Details</h2>
+                <p>Here is the image you provided:</p>
+                <canvas id="canvas" width="320" height="240"></canvas>
                 
-               </form> 
+                <form id="bookDetailsForm" class="form-group">
+                    <label for="bookTitle">Book Title:</label>
+                    <input type="text" id="bookTitle" name="book-title" placeholder="Enter the book's title" required />
+                    
+                    <label for="author">Author:</label>
+                    <input type="text" id="author" name="author" placeholder="Enter the author's name" required/>
+                    
+                    <button type="submit" class="donateBtn">Confirm & Donate</button>
+                    <button type="button" id="fixBtn" class="receiveBtn">Choose a Different Image</button>
+                </form>
             </div>
         </div>
-    </body>
+    </div>
 
+    <script>
+        // DOM Elements
+        const imageChoiceDiv = document.getElementById('imageChoice');
+        const captureContainer = document.getElementById('captureContainer');
+        const uploadContainer = document.getElementById('uploadContainer');
+        const detailsContainer = document.getElementById('detailsContainer');
+
+        const showCaptureBtn = document.getElementById('showCaptureBtn');
+        const showUploadBtn = document.getElementById('showUploadBtn');
+
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
+        const snapBtn = document.getElementById('snapBtn');
+        const fileInput = document.getElementById('fileInput');
+        const fixBtn = document.getElementById('fixBtn');
+        const bookDetailsForm = document.getElementById('bookDetailsForm');
+ 
+        let stream; // To hold the camera stream
+
+        // --- Event Listeners ---
+
+        // Show camera section
+        showCaptureBtn.addEventListener('click', async () => {
+            imageChoiceDiv.classList.add('hidden');
+            captureContainer.classList.remove('hidden');
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+            } catch (err) {
+                console.error("Error accessing camera: ", err);
+                alert("Could not access the camera. Please check permissions.");
+                resetFlow();
+            }
+        });
+
+        // Show upload section
+        showUploadBtn.addEventListener('click', () => {
+            imageChoiceDiv.classList.add('hidden');
+            uploadContainer.classList.remove('hidden');
+        });
+
+        // Take a snapshot
+        snapBtn.addEventListener('click', () => {
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            stopCamera();
+            showDetails();
+        });
+
+        // Handle file upload
+        fileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        context.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        showDetails();
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // Final form submission
+        bookDetailsForm.addEventListener('submit', (event) => {
+            event.preventDefault(); // Prevents the form from reloading the page
+            const title = document.getElementById('bookTitle').value;
+            const author = document.getElementById('author').value;
+            
+            // This is where you would upload the data
+            console.log('Uploading donation data...');
+            console.log('Title:', title);
+            console.log('Author:', author);
+            // You can get the image data from the canvas like this:
+            const imageData = canvas.toDataURL('image/png');
+            console.log('Image Data:', imageData.substring(0, 50) + '...'); // Log first 50 chars
+            
+            alert('Thank you for your donation!');
+            // Redirect to the main page or a 'thank you' page
+            window.location.href = 'index.html';
+        });
+
+        // "Fix" button resets the flow
+        fixBtn.addEventListener('click', resetFlow);
+        
+        // --- Helper Functions ---
+
+        // Stops the camera stream
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+        }
+
+        // Hides capture/upload and shows the details form
+        function showDetails() {
+            captureContainer.classList.add('hidden');
+            uploadContainer.classList.add('hidden');
+            detailsContainer.classList.remove('hidden');
+        }
+        
+        // Resets the page to the initial choice
+        function resetFlow() {
+            stopCamera();
+            detailsContainer.classList.add('hidden');
+            captureContainer.classList.add('hidden');
+            uploadContainer.classList.add('hidden');
+            imageChoiceDiv.classList.remove('hidden');
+            // Clear the canvas
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            // Reset the form
+            bookDetailsForm.reset();
+        }
+    </script>
+</body>
 </html>

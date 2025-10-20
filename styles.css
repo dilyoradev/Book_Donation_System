@@ -21,7 +21,7 @@ body {
 .main {
     display:flex;
     flex-direction: column;
-    /* background-color: beige; */
+    /*background-color: brown; */
     height: 100vh;
 }
 
@@ -100,12 +100,12 @@ header .button {
 
 }
 
-.login-page, .signup-page, .receive-page {
+.login-page, .signup-page, .receive-page, .donate-page {
   justify-content: center;
   align-items: center;
 }
 
-.login-container, .signup-container, .receive-container {
+.login-container, .signup-container, .receive-container,.donate-container {
     display: flex;
     flex-direction: column;
     background-color: whitesmoke;

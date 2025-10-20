@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Donate</title>
+        <link rel="stylesheet" href="styles.css">
+        <!--<script src="scripts/include.js" defer></script>-->
+         <style>
+            .uploadphoto{
+                width: auto;
+                height: auto;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                background-color: red;
+                color: yellowgreen;
+            }
+            .takephoto{
+                width: auto;
+                height: auto;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                /*background-color: blue;*/
+                color: yellowgreen;
+            }
+
+</style> 
+    </head>
+
+    <body>
+     <div id="header"></div>
+      <script src="scripts/include.js"></script>
+      <div class="gobackBtn-wrapper">
+      <a class="gobackBtn" href="index.html">Go Back</a>
+      </div>
+
+        <div class="main  donate-page">
+            <div class="donate-container">
+                <div class="takephoto">
+                    <h1>Take a Picture</h1>
+                    <video id="video" width="320" height="240" autoplay></video>
+                    <br>
+                    <button id="snap">📸 Take Picture</button>
+                    <br>
+                     <canvas id="canvas" width="320" height="240"></canvas>
+
+                     <script>
+                        const video = document.getElementById('video');
+                        const canvas = document.getElementById('canvas');
+                        const snap = document.getElementById('snap');
+                        const context = canvas.getContext('2d');
+
+                     // Access webcam
+                        navigator.mediaDevices.getUserMedia({ video: true })
+                        .then(stream => {
+                             video.srcObject = stream;
+
+                            })
+                        .catch(err => {
+                            console.error("Error accessing camera: ", err);
+                            });
+
+                    // Take a snapshot
+                         snap.addEventListener('click', () => {
+                        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                            });
+                     </script>
+                </div>
+                <div class="uploadphoto">
+
+                    <input
+                    type="file"
+                    id="user"
+                    capture="user"
+                    accept="image/*"
+                    >
+                </div>
+               <!---<form>
+                <input type="text" id="booktitle" name="book-title" />
+                <input type="text" id="author" name="author"/>
+                
+               </form> --->
+            </div>
+        </div>
+    </body>
+
+</html>
